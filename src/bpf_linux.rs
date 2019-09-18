@@ -1,7 +1,5 @@
 use byteorder::{LittleEndian, ReadBytesExt};
-use libc::{
-    self, c_int, c_uint, c_void, setsockopt, socklen_t, SOL_SOCKET,
-};
+use libc::{self, c_int, c_uint, c_void, setsockopt, socklen_t, SOL_SOCKET};
 use std::io::Cursor;
 use std::io::{Error, ErrorKind};
 use std::mem::size_of_val;

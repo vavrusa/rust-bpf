@@ -76,7 +76,9 @@ impl Module {
                             .ok_or(Error::from(ErrorKind::InvalidData))?;
                         let def =
                             crate::MapDefinition::parse(name, &data[sym.st_value as usize..])?;
-                        let map = crate::Map::new(def)?;
+                        let map = crate::Map::new(def).map_err(|e| {
+                            Error::new(e.kind(), format!("failed to load map: {}", e))
+                        })?;
                         map_symbols.insert(stndx, map.get_fd().clone());
                         module.maps.insert(name.to_string(), map);
                     }
@@ -126,7 +128,9 @@ impl Module {
 
             // Load program
             let prog = Prog::parse(&data)?;
-            let fd = module.load_program(name, kind, &prog)?;
+            let fd = module
+                .load_program(name, kind, &prog)
+                .map_err(|e| Error::new(e.kind(), format!("failed to load program: {}", e)))?;
             module
                 .programs
                 .insert(name.to_string(), Program { fd, kind, prog });
