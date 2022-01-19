@@ -1,4 +1,5 @@
 use byteorder::{LittleEndian, ReadBytesExt};
+use libc::ENOENT;
 use std::io::{Cursor, Error, ErrorKind};
 use std::os::raw::c_void;
 use std::os::unix::io::RawFd;
@@ -61,6 +62,14 @@ impl Map {
     pub fn get_fd(&self) -> &RawFd {
         &self.fd
     }
+
+    pub fn keys<K: Sized + Clone>(&self, key: K) -> Keys<K> {
+        Keys {
+            fd: self.fd,
+            key,
+            max: self.kind.max_entries as usize,
+        }
+    }
 }
 
 impl Drop for Map {
@@ -74,5 +83,43 @@ fn to_checked_ptr<V: Sized>(v: &V, expected_len: usize) -> Result<*const c_void,
         Ok(v as *const _ as *const c_void)
     } else {
         Err(ErrorKind::InvalidInput.into())
+    }
+}
+
+// The iterator may not work as expected, as the current key may be
+// evicted, then a call with a non exist key will reset the loop to
+// the beginning. The max field is to prevent dead loop under this
+// situation.
+pub struct Keys<K: Sized> {
+    fd: RawFd,
+    key: K,
+    max: usize,
+}
+
+// Clone is needed as otherwise the previous item can not be
+// referenced.
+impl<K: Sized + Clone> Iterator for Keys<K> {
+    type Item = Result<K, Error>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.max = self.max.checked_sub(1)?;
+
+        let mut next_key: K = unsafe { std::mem::zeroed() };
+        match crate::get_next_key(
+            self.fd,
+            &self.key as *const _ as *const c_void,
+            &mut next_key as *mut _ as *mut c_void,
+        ) {
+            Ok(_) => {
+                self.key = next_key;
+                return Some(Ok(self.key.clone()));
+            }
+            Err(e) if e.kind() == Error::from_raw_os_error(ENOENT).kind() => {
+                return None;
+            }
+            Err(e) => {
+                return Some(Err(e));
+            }
+        }
     }
 }

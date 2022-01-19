@@ -194,6 +194,13 @@ pub fn delete_elem(fd: RawFd, key: *const c_void) -> Result<(), Error> {
     }
 }
 
+pub fn get_next_key(fd: RawFd, key: *const c_void, next_key: *mut c_void) -> Result<(), Error> {
+    match unsafe { bpf_sys::bpf_get_next_key(fd, key as *mut _, next_key) } {
+        0 => Ok(()),
+        _ => Err(Error::last_os_error()),
+    }
+}
+
 pub fn prog_load(
     prog: &Prog,
     name: &str,
