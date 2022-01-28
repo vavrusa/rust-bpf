@@ -65,6 +65,11 @@ pub fn delete_elem(fd: RawFd, key: *const c_void) -> Result<(), Error> {
 }
 
 #[allow(unused_variables)]
+pub fn get_next_key(fd: RawFd, key: *const c_void, next_key: *mut c_void) -> Result<(), Error> {
+    Ok(())
+}
+
+#[allow(unused_variables)]
 pub fn prog_load(
     prog: &Prog,
     name: &str,
