@@ -29,32 +29,12 @@ impl Op {
 #[repr(C)]
 #[derive(Debug)]
 pub struct Prog {
-    len: c_ushort,
-    filter: *mut Op,
-}
-
-impl Drop for Prog {
-    fn drop(&mut self) {
-        unsafe {
-            let len = self.len as usize;
-            let ptr = self.filter;
-            Vec::from_raw_parts(ptr, len, len);
-        }
-    }
+    insns: Vec<Op>,
 }
 
 impl Prog {
-    pub fn new(ops: Vec<Op>) -> Prog {
-        let mut ops = ops.into_boxed_slice();
-        let len = ops.len();
-        let ptr = ops.as_mut_ptr();
-
-        forget(ops);
-
-        Prog {
-            len: len as _,
-            filter: ptr,
-        }
+    pub fn new(insns: Vec<Op>) -> Prog {
+        Prog { insns }
     }
 
     pub fn parse(code: &[u8]) -> Result<Prog, Error> {

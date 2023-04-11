@@ -47,8 +47,7 @@ impl Module {
         for (shndx, section) in obj.section_headers.iter().enumerate() {
             let section_name = obj
                 .shdr_strtab
-                .get(section.sh_name)
-                .and_then(|x| x.ok())
+                .get_at(section.sh_name)
                 .ok_or(Error::from(ErrorKind::InvalidData))?;
             let section_end = (section.sh_offset + section.sh_size) as usize;
             let data = &code[section.sh_offset as usize..section_end];
@@ -71,8 +70,7 @@ impl Module {
                     {
                         let name = obj
                             .strtab
-                            .get(sym.st_name)
-                            .and_then(|x| x.ok())
+                            .get_at(sym.st_name)
                             .ok_or(Error::from(ErrorKind::InvalidData))?;
                         let def =
                             crate::MapDefinition::parse(name, &data[sym.st_value as usize..])?;
@@ -91,8 +89,7 @@ impl Module {
                     {
                         let name = obj
                             .strtab
-                            .get(sym.st_name)
-                            .and_then(|x| x.ok())
+                            .get_at(sym.st_name)
                             .ok_or(Error::from(ErrorKind::InvalidData))?;
                         programs.insert(name, (shndx, BPF_PROG_TYPE_SOCKET_FILTER, data));
                     }
