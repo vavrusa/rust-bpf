@@ -22,4 +22,5 @@ byteorder = "1.4"
 goblin = {version = "0.6", optional = true}
 
 [target.'cfg(target_os = "linux")'.dependencies]
-bpf-sys = "1"
+bpf-sys = { git = "https://github.com/mworsley-cloudflare/redbpf.git", rev = "97cd230faa7bf9f44dbcf5b0e1f27731d2a914ed" }
+
